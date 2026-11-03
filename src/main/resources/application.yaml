@@ -1,0 +1,50 @@
+spring:
+  main:
+    web-application-type: servlet
+
+  # 接続データベースの定義(https://spring.pleiades.io/spring-ai/reference/api/vectordbs.html)
+  datasource:
+    url: jdbc:postgresql://${VECTOR_DB_HOST}/${VECTOR_DB_NAME}
+    username: ${VECTOR_DB_USERNAME}
+    password: ${VECTOR_DB_PASSWORD}
+
+  ai:
+    # アプリケーションで利用するLLMの定義(https://spring.pleiades.io/spring-ai/reference/api/llms.html)
+    model:
+      # ChatClientが利用するLLMの定義(https://spring.pleiades.io/spring-ai/reference/api/chat/ollama-chat.html)
+      chat: ollama
+      # EmbeddingsClientが利用するLLMの定義(https://spring.pleiades.io/spring-ai/reference/api/embeddings/ollama-embeddings.html)
+      embedding: ollama
+
+    ollama:
+      base-url: ${OLLAMA_URL}
+
+      # チャットモデル https://spring.pleiades.io/spring-ai/reference/api/chat/ollama-chat.html
+      chat:
+        model: gemma4:e4b  #多言語対応、長文対応、(Max8192 tokens)
+        options:
+          temperature: 0.1
+
+      # Embeddingモデル https://docs.spring.io/spring-ai/reference/api/embeddings/ollama-embeddings.html
+      embedding:
+        model: bge-m3 #AIに自社データやPDFなどの外部知識を効率よく検索させるためのインデックス作成マシーン。軽量で他のLLM（Gemma 3など）と共存しやすい
+
+    # MCPサーバの設定(https://spring.pleiades.io/spring-ai/reference/api/mcp/mcp-server-boot-starter-docs.html)
+    mcp:
+      server:
+        protocol: STREAMABLE
+
+    # 接続データベース(PGVector)の定義(https://spring.pleiades.io/spring-ai/reference/api/vectordbs/pgvector.html)
+    vectorstore:
+      pgvector:
+        initialize-schema: false
+        dimensions: 1024
+        distance-type: COSINE_DISTANCE
+        index-type: HNSW
+        table-name: vector_store
+
+# ChatClientに利用するMCPサーバを提供(ChatClientをLLMのHarnessとして利用)
+baseball:
+  mcp:
+    server:
+      url: http://localhost:8080/mcp
